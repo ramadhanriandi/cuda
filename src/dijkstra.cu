@@ -7,46 +7,8 @@
 
 #define n_node 500
 
-int matrix_distance[n_node][n_node];
-int final_matrix_distance[n_node][n_node];
-
-__global__
-void cuda_dijkstra() {
-  // CUDA PARALLEL DIJKSTRA EXECUTION FROM EACH SOURCE NODE
-  int index = blockIdx.x * blockDim.x + threadIdx.x;
-  int stride = blockDim.x * gridDim.x;
-  for (int itr = index; itr < n_node; itr += stride) {
-    dijkstra(itr, final_matrix_distance[itr]);
-    printf("Cuda | Node %d out of %d\n", itr+1, n_node);
-  }
-}
-
-int main(int argc, char** argv[]) {
-  // source node, iterator
-  int source, itr;
-
-  // cudaMallocManaged(&matrix_distance,n_node*n_node*sizeof(int));
-  // cudaMallocManaged(&final_matrix_distance,n_node*n_node*sizeof(int));
-
-  // seed from 13517080
-  int seed = 80;
-
-  // time for parallel
-  // double t_start_parallel, t_end_parallel;
-
-  // Matrix initialization for graph
-  init_graph(seed);
-
-  // TODO: Thread count using input from argument (this use all available computing resources on the GPU)
-  int block_size = 256;
-  int n_block = (n_node + block_size - 1) / block_size;
-
-  cuda_dijkstra<<<n_block, block_size>>>();
-
-  print_matrix_to_file();
-
-  return 0;
-}
+// int matrix_distance[n_node][n_node];
+// int final_matrix_distance[n_node][n_node];
 
 void init_graph(int seed) {
   for (int i = 0; i < n_node; i++) {
@@ -95,7 +57,6 @@ int minDistance(int dist[], bool sptSet[]) {
   return min_index; 
 } 
 
-__device__
 void dijkstra(int src, int dist[n_node]) { 
   bool sptSet[n_node];
 
@@ -117,4 +78,46 @@ void dijkstra(int src, int dist[n_node]) {
       }
     }
   } 
+}
+
+__global__
+void cuda_dijkstra() {
+  // CUDA PARALLEL DIJKSTRA EXECUTION FROM EACH SOURCE NODE
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  int stride = blockDim.x * gridDim.x;
+  for (int itr = index; itr < n_node; itr += stride) {
+    dijkstra(itr, final_matrix_distance[itr]);
+    printf("Cuda | Node %d out of %d\n", itr+1, n_node);
+  }
+}
+
+int main(int argc, char** argv[]) {
+  int **matrix_distance, **final_matrix_distance;
+
+  cudaMallocManaged(&matrix_distance, n_node * sizeof(int *));
+  cudaMallocManaged(&final_matrix_distance, n_node * sizeof(int *));
+
+  for (int i = 0; i < n_node; i++) {
+    cudaMallocManaged(&matrix_distance[i], n_node * sizeof(int));
+    cudaMallocManaged(&final_matrix_distance[i], n_node * sizeof(int));
+  } 
+
+  // seed from 13517080
+  int seed = 80;
+
+  // time for parallel
+  // double t_start_parallel, t_end_parallel;
+
+  // Matrix initialization for graph
+  init_graph(seed);
+
+  // TODO: Thread count using input from argument (this use all available computing resources on the GPU)
+  int block_size = 256;
+  int n_block = (n_node + block_size - 1) / block_size;
+
+  cuda_dijkstra<<<n_block, block_size>>>();
+
+  print_matrix_to_file();
+
+  return 0;
 }
