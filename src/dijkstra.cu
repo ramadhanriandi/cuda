@@ -7,6 +7,7 @@
 
 #define n_node 500
 
+__host__
 void init_graph(int **matrix_distance, int seed) {
   for (int i = 0; i < n_node; i++) {
     for (int j = 0; j < n_node; j++) {
@@ -26,6 +27,7 @@ void init_graph(int **matrix_distance, int seed) {
   }
 }
 
+__host__
 void print_matrix_to_file(int **final_matrix_distance) {
   FILE * fp;
   /* open the file for writing*/
@@ -42,6 +44,7 @@ void print_matrix_to_file(int **final_matrix_distance) {
   fclose (fp);
 }
 
+__device__
 int minDistance(int dist[], bool sptSet[]) { 
   int min = INT_MAX, min_index; 
 
