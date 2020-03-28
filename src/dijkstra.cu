@@ -54,6 +54,7 @@ int minDistance(int dist[], bool sptSet[]) {
   return min_index; 
 } 
 
+__device__
 void dijkstra(int src, int dist[n_node], int **matrix_distance) { 
   bool sptSet[n_node];
 
