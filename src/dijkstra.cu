@@ -7,8 +7,18 @@
 
 #define n_node 3000
 
-int matrix_distance[n_node][n_node];
-int final_matrix_distance[n_node][n_node];
+int* matrix_distance;
+int* final_matrix_distance;
+
+__global__
+void cuda_dijkstra() {
+  // CUDA PARALLEL DIJKSTRA EXECUTION FROM EACH SOURCE NODE
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  int stride = blockDim.x * gridDim.x;
+  for (int i = index; i < n; i += stride) {
+    dijkstra(i, final_matrix_distance[i]);
+  }
+}
 
 int main(int argc, char** argv[]) {
   // number of thread, bool of serial, source node, iterator
@@ -16,6 +26,9 @@ int main(int argc, char** argv[]) {
 
   n_thread = atoi(argv[1]);
   use_serial = atoi(argv[2]);
+
+  cudaMallocManaged(&matrix_distance,n_node*n_node*sizeof(int));
+  cudaMallocManaged(&final_matrix_distance,n_node*n_node*sizeof(int));
 
   // seed from 13517029
   int seed = 29;
@@ -49,35 +62,19 @@ int main(int argc, char** argv[]) {
 
   } else if (use_serial == 0) {
 
-    // CUDA PARALLEL DIJKSTRA EXECUTION
+    // TODO: Thread count using input from argument (this use a constant)
+    int blockSize = 256;
+    int numBlocks = (N + blockSize - 1) / blockSize;
 
-//    // START PARALLEL DIJKSTRA ALGORITHM USING OPENMP
-//    t_start_parallel = omp_get_wtime();
-//
-//    #pragma omp parallel num_threads(n_thread)
-//    openmp_dijkstra();
-//
-//    t_end_parallel = omp_get_wtime();
-//
-//    double time_taken_openmp = (t_end_parallel - t_start_parallel) * 1000000;
-//
-//    // PRINT RESULT OF PARALLEL DIJKSTRA ALGORITHM
-//    printf("\n%s%2.f%s\n", "Time elapsed for OpenMP parallel dijkstra algorithm: ", time_taken_openmp, " microsecond");
-//    print_matrix_to_file();
-//    // END OF PARALLEL DIJKSTRA ALGORITHM
+    cuda_dijkstra<<<numBlocks, blockSize>>>();
+
+    print_matrix_to_file();
+
   }
+  free(matrix_distance);
+  free(final_matrix_distance);
 
   return 0;
-}
-
-__global__
-void cuda_dijkstra() {
-  // CUDA PARALLEL DIJKSTRA EXECUTION FROM EACH SOURCE NODE
-  int index = blockIdx.x * blockDim.x + threadIdx.x;
-  int stride = blockDim.x * gridDim.x;
-  for (int i = index; i < n; i += stride) {
-    dijkstra(i, final_matrix_distance[i]);
-  }
 }
 
 void init_graph(int seed) {
