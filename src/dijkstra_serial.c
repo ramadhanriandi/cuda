@@ -35,6 +35,8 @@ int main(int argc, char** argv[]) {
 
   double time_taken_serial = ((double)t_serial * 1000000) / (CLOCKS_PER_SEC);
 
+  print_matrix_to_file();
+
   // PRINT RESULT OF SERIAL DIJKSTRA ALGORITHM
   printf("\n%s%2.f%s\n", "Time elapsed for serial dijkstra algorithm: ", time_taken_serial, " microsecond");
 

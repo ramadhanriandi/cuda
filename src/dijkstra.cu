@@ -109,13 +109,25 @@ int main(int argc, char** argv[]) {
   // Matrix initialization for graph
   init_graph(matrix_distance, seed);
 
-  // TODO: Thread count using input from argument (this use all available computing resources on the GPU)
   int block_size = 256;
   int n_block = (n_node + block_size - 1) / block_size;
 
+  cudaEvent_t start_time, end_time;
+  cudaEventCreate(&start_time);
+  cudaEventCreate(&end_time);
+
+  cudaEventRecord(start_time);
+
   cuda_dijkstra<<<n_block, block_size>>>(matrix_distance, final_matrix_distance);
 
+  cudaEventRecord(end_time);
+
   cudaDeviceSynchronize();
+
+  float elapsed_time = 0.0;
+  cudaEventElapsedTime(&elapsed_time, start_time, end_time);
+
+  printf("\n%s%2.f%s\n", "Time elapsed for cuda dijkstra algorithm: ", elapsed_time*1000, " microsecond");
 
   print_matrix_to_file(final_matrix_distance);
 
