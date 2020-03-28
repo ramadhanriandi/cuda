@@ -5,7 +5,7 @@
 #include <omp.h>
 #include <limits.h> 
 
-#define n_node 3000
+#define n_node 500
 
 int* matrix_distance;
 int* final_matrix_distance;
@@ -22,19 +22,13 @@ void cuda_dijkstra() {
 
 int main(int argc, char** argv[]) {
   // number of thread, bool of serial, source node, iterator
-  int n_thread, use_serial, source, itr;
-
-  n_thread = atoi(argv[1]);
-  use_serial = atoi(argv[2]);
+  int source, itr;
 
   cudaMallocManaged(&matrix_distance,n_node*n_node*sizeof(int));
   cudaMallocManaged(&final_matrix_distance,n_node*n_node*sizeof(int));
 
-  // seed from 13517029
-  int seed = 29;
-
-  // time for serial
-  clock_t t_serial;
+  // seed from 13517080
+  int seed = 80;
 
   // time for parallel
   double t_start_parallel, t_end_parallel;
@@ -42,35 +36,14 @@ int main(int argc, char** argv[]) {
   // Matrix initialization for graph
   init_graph(seed);
 
-  if (use_serial == 1) {
+  // TODO: Thread count using input from argument (this use all available computing resources on the GPU)
+  int blockSize = 256;
+  int numBlocks = (N + blockSize - 1) / blockSize;
 
-    // START SERIAL DIJKSTRA ALGORITHM
-    t_serial = clock();
+  cuda_dijkstra<<<numBlocks, blockSize>>>();
 
-    for (itr = 0; itr < n_node; itr++) {  
-      dijkstra(itr, final_matrix_distance[itr]);
-      printf("Serial | Node %d out of %d\n", itr, n_node);
-    }
+  print_matrix_to_file();
 
-    t_serial = clock() - t_serial;
-
-    double time_taken_serial = ((double)t_serial * 1000000) / (CLOCKS_PER_SEC);
-
-    // PRINT RESULT OF SERIAL DIJKSTRA ALGORITHM
-    printf("\n%s%2.f%s\n", "Time elapsed for serial dijkstra algorithm: ", time_taken_serial, " microsecond");
-    // END OF SERIAL DIJKSTRA ALGORITHM
-
-  } else if (use_serial == 0) {
-
-    // TODO: Thread count using input from argument (this use all available computing resources on the GPU)
-    int blockSize = 256;
-    int numBlocks = (N + blockSize - 1) / blockSize;
-
-    cuda_dijkstra<<<numBlocks, blockSize>>>();
-
-    print_matrix_to_file();
-
-  }
   free(matrix_distance);
   free(final_matrix_distance);
 
@@ -99,7 +72,7 @@ void init_graph(int seed) {
 void print_matrix_to_file() {
   FILE * fp;
   /* open the file for writing*/
-  fp = fopen ("../output/result_3000.txt","w");
+  fp = fopen ("../output/cuda_500.txt","w");
 
   for (int i = 0; i < n_node; i++) {
     for (int j = 0; j < n_node; j++) {
