@@ -62,7 +62,7 @@ int main(int argc, char** argv[]) {
 
   } else if (use_serial == 0) {
 
-    // TODO: Thread count using input from argument (this use a constant)
+    // TODO: Thread count using input from argument (this use all available computing resources on the GPU)
     int blockSize = 256;
     int numBlocks = (N + blockSize - 1) / blockSize;
 
