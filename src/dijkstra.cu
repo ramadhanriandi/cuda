@@ -70,17 +70,14 @@ int main(int argc, char** argv[]) {
   return 0;
 }
 
+__global__
 void cuda_dijkstra() {
   // CUDA PARALLEL DIJKSTRA EXECUTION FROM EACH SOURCE NODE
-
-//  int rank = omp_get_thread_num();
-//  int n_thread = omp_get_num_threads();
-//  int itr;
-//
-//  for (itr = rank; itr < n_node; itr += n_thread) {
-//    dijkstra(itr, final_matrix_distance[itr]);
-//    printf("Thread %d | Node %d out of %d\n", rank, itr, n_node);
-//  }
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  int stride = blockDim.x * gridDim.x;
+  for (int i = index; i < n; i += stride) {
+    dijkstra(i, final_matrix_distance[i]);
+  }
 }
 
 void init_graph(int seed) {
