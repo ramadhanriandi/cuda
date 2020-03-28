@@ -7,10 +7,7 @@
 
 #define n_node 500
 
-// int matrix_distance[n_node][n_node];
-// int final_matrix_distance[n_node][n_node];
-
-void init_graph(int seed) {
+void init_graph(int **matrix_distance, int seed) {
   for (int i = 0; i < n_node; i++) {
     for (int j = 0; j < n_node; j++) {
       if (i == j) {
@@ -29,7 +26,7 @@ void init_graph(int seed) {
   }
 }
 
-void print_matrix_to_file() {
+void print_matrix_to_file(int **final_matrix_distance) {
   FILE * fp;
   /* open the file for writing*/
   fp = fopen ("../output/cuda_500.txt","w");
@@ -57,7 +54,7 @@ int minDistance(int dist[], bool sptSet[]) {
   return min_index; 
 } 
 
-void dijkstra(int src, int dist[n_node]) { 
+void dijkstra(int src, int dist[n_node], int **matrix_distance) { 
   bool sptSet[n_node];
 
   for (int i = 0; i < n_node; i++) {
@@ -81,12 +78,12 @@ void dijkstra(int src, int dist[n_node]) {
 }
 
 __global__
-void cuda_dijkstra() {
+void cuda_dijkstra(int **matrix_distance, int **final_matrix_distance) {
   // CUDA PARALLEL DIJKSTRA EXECUTION FROM EACH SOURCE NODE
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   int stride = blockDim.x * gridDim.x;
   for (int itr = index; itr < n_node; itr += stride) {
-    dijkstra(itr, final_matrix_distance[itr]);
+    dijkstra(itr, final_matrix_distance[itr], matrix_distance);
     printf("Cuda | Node %d out of %d\n", itr+1, n_node);
   }
 }
@@ -105,19 +102,26 @@ int main(int argc, char** argv[]) {
   // seed from 13517080
   int seed = 80;
 
-  // time for parallel
-  // double t_start_parallel, t_end_parallel;
-
   // Matrix initialization for graph
-  init_graph(seed);
+  init_graph(matrix_distance, seed);
 
   // TODO: Thread count using input from argument (this use all available computing resources on the GPU)
   int block_size = 256;
   int n_block = (n_node + block_size - 1) / block_size;
 
-  cuda_dijkstra<<<n_block, block_size>>>();
+  cuda_dijkstra<<<n_block, block_size>>>(matrix_distance, final_matrix_distance);
 
-  print_matrix_to_file();
+  cudaDeviceSynchronize();
+
+  print_matrix_to_file(final_matrix_distance);
+
+  for (int i = 0; i < n_node; i++) {
+    cudaFree(matrix_distance[i]);
+    cudaFree(final_matrix_distance[i]);
+  }
+
+  cudaFree(matrix_distance);
+  cudaFree(final_matrix_distance);
 
   return 0;
 }
