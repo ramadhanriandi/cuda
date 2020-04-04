@@ -1,7 +1,8 @@
 # CUDA
 
 ## Petunjuk Penggunaan Program
-
+1. Kompilasi program serial dan parallel yang dibuat dengan menjalankan perintah `make`.
+2. Jalankan hasil kompilasi pada folder `src` dengan perintah `./dijkstra` untuk parallel dan `./dijkstra_serial` untuk serial.
     
 ## Pembagian Tugas
 Berikut adalah pembagian tugas yang diterapkan.
