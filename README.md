@@ -16,8 +16,34 @@ Berikut adalah pembagian tugas yang diterapkan.
 Berikut adalah laporan pengerjaan dari tugas ini.
 
 ### Deskripsi Solusi Parallel
+Pada pengerjaan tugas ini, dilakukan proses pencarian jarak terpendek dari setiap node ke semua node lainnya.
+Untuk mencari jarak terpendek dengan suatu source node tertentu, kita menggunakan algoritma dijkstra untuk melakukan penelusuran yang menghasilkan array yang berisi jarak terpendak source node tersebut ke semua node lainnya.
+Untuk mendapatkan matriks yang berisi jarak terpendek dari setiap node ke semua node lainnya, algoritma dijkstra yang diterapkan pada setiap node dijalankan secara parallel dan setiap hasil array jarak terpendek dari algoritma tersebut akan disatukan menjadi sebuah matriks.
 
+Kita menggunakan CUDA untuk melakukan pemrograman paralel dengan NVIDIA GPU. Dengan CUDA, dapat dilakukan pemrosesan algoritma dalam bahasa C++ dengan memanfaatkan ribuan thread paralel yang berjalan pada NVIDIA GPU(s), sebuah pendekatan pemrograman yang dikenal sebagai GPGPU (General-Purpose computing on Graphics Processing Units).
+Platform CUDA sendiri adalah sebuah layer perangkat lunak yang dapat memberikan akses langsung terhadap virtual instruction set dan elemen komputasi paralel, untuk melakukan eksekusi terhadap compute kernels. 
 
+Setelah graph berhasil di-generate menggunakan seed yang diberikan, dilakukan perhitungan waktu proses untuk serial dan parallel.
+Serial menggunakan fungsi ```clock() ``` sedangkan parallel menggunakan fungsi berikut:
+```
+cudaEvent_t start_time, end_time;
+cudaEventCreate(&start_time);
+cudaEventCreate(&end_time);
+
+cudaEventRecord(start_time);
+
+// Cuda Djikstra Parallel Algorithm execution here
+
+cudaEventRecord(end_time);
+cudaDeviceSynchronize();
+
+float elapsed_time = 0.0;
+cudaEventElapsedTime(&elapsed_time, start_time, end_time);
+```
+Agar program dapat bekerja secara parallel, diberikan sebuah jumlah block (```n_block```) dan ukuran block (```block_size```) yang digunakan dalam pemrosesan algoritma dijkstra:
+```
+cuda_dijkstra<<<n_block, block_size>>>(matrix_distance, final_matrix_distance);
+```
 ### Analisis Solusi yang Diberikan
 
 
