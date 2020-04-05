@@ -5,7 +5,7 @@
 #include <omp.h>
 #include <limits.h> 
 
-#define n_node 500
+#define n_node 3000
 
 int matrix_distance[n_node][n_node];
 int final_matrix_distance[n_node][n_node];
@@ -67,7 +67,7 @@ void init_graph(int seed) {
 void print_matrix_to_file() {
   FILE * fp;
   /* open the file for writing*/
-  fp = fopen ("../output/serial_500.txt","w");
+  fp = fopen ("../output/serial_3000.txt","w");
 
   for (int i = 0; i < n_node; i++) {
     for (int j = 0; j < n_node; j++) {
